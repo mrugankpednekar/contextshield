@@ -12,6 +12,13 @@ import { BackgroundGrid } from "@/components/ui/background-grid";
 import { Textarea } from "@/components/ui/textarea";
 import type { DetectorHit } from "@/lib/api";
 
+type DemoCompleteResponse = {
+  redacted?: string;
+  hits?: DetectorHit[];
+  completion?: string;
+  detail?: string;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 const featureCards = [
@@ -96,8 +103,16 @@ export default function Playground() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, model, api_key: apiKey || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "Failed to call model");
+      const raw = await res.text();
+      let data: DemoCompleteResponse = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        if (!res.ok) {
+          throw new Error(raw || "Model call failed");
+        }
+      }
+      if (!res.ok) throw new Error(data?.detail || raw || "Failed to call model");
       setRedacted(data.redacted || "");
       setHits(data.hits || []);
       setLlmOutput(data.completion || "");
