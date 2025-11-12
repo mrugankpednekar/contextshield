@@ -1,0 +1,166 @@
+# ContextShield – Comprehensive Technical Overview
+
+ContextShield is a policy-driven LLM proxy that sanitises prompts and responses before they ever reach an upstream model. The project lives in this monorepo with two major subsystems:
+
+- **backend/** – FastAPI service providing the proxy (`/v1/chat/completions`), demo endpoints (`/demo/submit`, `/demo/complete`), audit summaries, policy CRUD, and health checks.
+- **web/** – Next.js App Router frontend featuring the playground, dashboards, events feed, and policy editor. It also exposes proxy API routes (`/api/demo`, `/api/demo/complete`) to avoid CORS and hide server keys.
+
+Below is a deep dive into every important component, techniques used, and current gaps.
+
+---
+## 1. Backend Architecture (FastAPI)
+
+### 1.1 Entry point
+- `backend/app.py` instantiates FastAPI with CORS, includes routers, and exposes `/health`.
+
+### 1.2 Configuration
+- `backend/config.py` (`Settings` via pydantic-settings) reads environment such as `GROQ_API_KEY`, `GROQ_BASE_URL`, `DATABASE_URL`, `ALLOW_ORIGINS`, `max_scan_bytes`, and the policy directory.
+- `.env` example: 
+  ```
+  GROQ_API_KEY=sk-...
+  GROQ_BASE_URL=https://api.groq.com/openai/v1
+  DATABASE_URL=postgresql+psycopg://...
+  ```
+
+### 1.3 Routers
+- **Proxy (`routers/proxy.py`)** – Implements `/v1/chat/completions`. Flow:
+  1. Load tenant policy.
+  2. Scan + redact request payload (regex presets + entropy).
+  3. If policy says enforce and blocked entities are found, return 422.
+  4. Forward cleaned payload to Groq (OpenAI-compatible API). Streams are supported.
+  5. Optionally redact Groq response (if policy enables `responses.redact_model_output`).
+  6. Log hits/latency via `store/events.py`.
+- **Demo (`routers/demo.py`)** – `/demo/submit` (redact-only) and `/demo/complete` (redact + call Groq, returning the completion). Used exclusively by the playground.
+- **Audit (`routers/audit.py`)** – In-memory summary feed; future replacement with Postgres.
+- **Policy (`routers/policy.py`)** – Fetch, validate, and activate YAML policies.
+- **Health (`routers/health.py`)** – Simple readiness endpoint.
+
+### 1.4 Detection & Redaction Pipeline
+- `backend/pii/detectors.py` has:
+  - Email, US phone, international phone (`+country` pattern), credit card, SSN, JWT, AWS access key, password (“password is|=|: value”), and entropy detector for generic secrets.
+  - `regex_scan()` returns hit dicts with type/start/end/value (handles capture groups for passwords).
+  - `entropy_candidates()` finds high-entropy tokens using Shannon entropy.
+- `backend/pii/redactor.py` implements actions:
+  - `mask` – email-only specific mask.
+  - `tokenize` – produces structured placeholders like `{{AWS_ACCESS_KEY_1}}`.
+  - `drop` – removes text entirely (rare in current policy).
+- `backend/pii/policy.py` loads default YAML, merges overrides per tenant, and exposes helper functions (`load_policy_for_tenant`, `write_policy_yaml`).
+
+### 1.5 Policy defaults (`backend/policies/demo.yaml`)
+- `mode: observe` (enforce just warns).
+- Detection presets include all regex types plus entropy & optional NER.
+- Current redaction actions: `tokenize` for email/phones/credit cards/SSNs/JWT/AWS key/password. Tokenization ensures placeholders exist for DB logging.
+- `block_if_detected`: credit card, SSN, JWT, AWS key, password.
+
+### 1.6 Storage & Logging
+- `backend/store/events.py` keeps a ring buffer for demo events (max 5000). Each event stores tenant, action (pass/redact/block), hits, bytes, etc.
+- `/v1/audit/summary` and `/v1/audit/events` read from this buffer. Production plan is to swap to Postgres + SSE/WebSockets.
+
+### 1.7 External Calls
+- Groq API call uses `httpx` async client with the user-supplied key (if provided in `demo/complete`) or server fallback (`GROQ_API_KEY`). Endpoint: `POST {GROQ_BASE_URL}/chat/completions` with OpenAI-compatible schema.
+
+---
+## 2. Frontend Architecture (Next.js + Tailwind)
+
+### 2.1 Structure
+- `web/app/` – App Router pages:
+  - `page.tsx` – playground hero + diff + Groq output.
+  - `dashboard/page.tsx`, `events/page.tsx`, `policies/page.tsx`.
+  - `api/` routes for demo proxying.
+- `web/components/` – UI primitives (nav, KPI cards, diff, detection table, etc.).
+- `web/components/ui/` – layout helpers (`background-grid`, `bento-grid`).
+- `web/styles/globals.css` – Tailwind base with custom fonts.
+- `postcss.config.mjs`, `tailwind.config.ts` – Tailwind configuration (v3).
+
+### 2.2 Playground Flow
+1. **Hero** – Centered CTA with Groq model dropdown (`mixtral-8x7b-32768`, `llama-3.1-8b-instant`, `gemma2-9b-it`) and optional API key input.
+2. **Buttons** – “Redact only” → `/demo/submit`; “Redact + call model” → `/demo/complete` (through Next.js API proxies to avoid CORS and keep server key hidden).
+3. **Diff section** – Shows original vs redacted text (via `PiiDiff`), detection list (`RedactionTable`), and the Groq completion if the model call succeeds.
+4. **Control cards** – Highlight detection/response features.
+
+### 2.3 Dashboard / Events / Policies
+- Dashboard shows KPIs (only when data exists), request vs redaction chart (dummy data until events are persisted), and top entity counts.
+- Events page lists recent requests with action chips, hits, bytes, latency.
+- Policies page fetches YAML and lets you validate/activate via the backend policy APIs.
+
+### 2.4 Styling
+- Tailwind-based glassmorphism (rounded cards, gradients, glow). Global fonts from Google Fonts.
+- Layout (`app/layout.tsx`) renders a sidebar nav for large screens and collapses to a top nav on mobile. Aurora background component adds subtle motion.
+
+---
+## 3. Techniques & Design Choices
+
+1. **Regex + entropy detection**: fast, deterministic, easy to configure per tenant. Supports adding custom presets (just edit `detectors.py` and policy YAML).
+2. **Tokenization**: Instead of dropping secrets, we emit deterministic placeholders so downstream logs can reference them without leaking content.
+3. **Groq integration**: uses OpenAI-compatible schema, so existing prompts can switch from OpenAI to Groq with minimal changes.
+4. **Demo-friendly**: `/demo/complete` makes it easy to show sanitized prompts and upstream completions without leaking API keys.
+5. **YAML policies**: easy to version-control, edit via the frontend policy editor, and reload via the policy router.
+
+---
+## 4. Current Limitations / Risks
+
+- **Persistence & scaling**: Audit data is in-memory; if the server restarts, all metrics vanish. Need Postgres/SSE for production.
+- **Auth & rate limits**: Proxy and demo endpoints are wide open—no tenant API keys or throttling yet.
+- **Detection coverage**: Regex presets cover common PII, AWS keys, JWT, and generic passwords, but not names/orgs (NER disabled by default) or full international phone formats beyond the new `phone_intl`. You may need additional rules for domain-specific data.
+- **Response redaction**: We can redact Groq responses, but we don’t persist placeholders for responses or show a diff vs original.
+- **UI metrics**: Dashboard charts use fake series until real persistence is implemented.
+- **Secrets in logs**: If `logging.store_raw` were ever enabled, make sure the storage layer encrypts data.
+
+---
+## 5. Suggested Next Steps
+
+1. **Event persistence + streaming**: Replace in-memory events with Postgres and stream updates via SSE/WebSockets to the dashboard.
+2. **Tenant auth**: API keys per tenant, hashed storage, and rate limiting to prevent abuse.
+3. **Extended detection**: Add optional NER, contextual regex (e.g., “account number”), and better password patterns (multi-word phrases).
+4. **Response sanitisation diff**: Show Groq’s original completion vs the redacted version to prove secrets never leak.
+5. **CI/CD and tests**: Add unit tests for detectors/redactor, integration tests for the proxy, and Prettier/ESLint in CI.
+
+---
+## 6. How to Run (summary)
+
+### Backend
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+cd backend
+uvicorn backend.app:app --reload --port 8000
+```
+Set `GROQ_API_KEY` in `backend/.env` (fallback for demo completions).
+
+### Frontend
+```bash
+cd web
+npm install
+NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
+```
+Visit http://localhost:3000 (or whichever port Next.js picks if 3000 is busy).
+
+### Docker (optional)
+```bash
+docker compose up --build
+```
+Starts Postgres, FastAPI (`:8000`), Next.js (`:3000`).
+
+---
+## 7. Repository Layout (quick reference)
+```
+context_shield/
+├─ backend/
+│  ├─ app.py                # FastAPI bootstrap
+│  ├─ routers/              # proxy, demo, audit, policy, health
+│  ├─ pii/                  # detectors, redactor, policy loader
+│  ├─ store/                # events buffer + future DB hooks
+│  └─ policies/             # YAML policies per tenant
+├─ web/
+│  ├─ app/                  # Next.js App Router pages + API routes
+│  ├─ components/           # UI blocks (nav, diff, cards, etc.)
+│  ├─ components/ui/        # Layout helpers
+│  └─ styles/               # Tailwind globals
+├─ docker-compose.yml
+├─ README.md
+└─ CONTEXTSHIELD_OVERVIEW.txt  # This file
+```
+
+---
+This document should give anyone joining the project a clear picture of the architecture, techniques, and outstanding work. Feel free to update it as the project evolves.
