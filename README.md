@@ -4,7 +4,7 @@ ContextShield is an LLM proxy that redacts PII/secrets before prompts reach an u
 
 ## What you get
 - **Proxy API** – `/v1/chat/completions` drop-in for OpenAI/Groq with regex + entropy detection, optional Presidio NER, enforcement/observe modes, and request/response logging.
-- **Demo endpoint** – `/demo/submit` for a safe playground that never forwards upstream.
+- **Demo endpoints** – `/demo/submit` for redaction previews, plus `/demo/complete` that calls Groq with your (optional) API key so you can see sanitized model output directly in the playground.
 - **Live dashboard** – Next.js app with playground, charts, events feed, and policy editor.
 - **Policy engine** – YAML per tenant with presets, ner/entropy toggles, and redaction strategies.
 - **Storage hooks** – SQLAlchemy models for Postgres plus in-memory event buffer for the UI demo.
@@ -31,6 +31,10 @@ npm install
 npm run dev
 ```
 Set `NEXT_PUBLIC_API_BASE` (and `API_BASE` for server-side routes) to your FastAPI origin, e.g. `http://localhost:8000`.
+
+### Playground tips
+- From the hero section, pick a Groq model (mixtral, llama3, etc.) and optionally paste your key—the UI falls back to the server key if you leave it blank.
+- The “Redact only” button shows sanitized prompts; “Redact + call model” hits the `/demo/complete` endpoint so you can inspect the cleaned prompt and the Groq completion side by side.
 
 ## Docker & compose
 A ready-to-run stack is available:

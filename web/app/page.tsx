@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/section-heading";
 import { FeatureCard } from "@/components/feature-card";
 import { BackgroundGrid } from "@/components/ui/background-grid";
+import { Textarea } from "@/components/ui/textarea";
 import type { DetectorHit } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
@@ -37,6 +38,12 @@ const featureCards = [
   },
 ];
 
+const MODEL_OPTIONS = [
+  { label: "Mixtral 8x7B (default)", value: "mixtral-8x7b-32768" },
+  { label: "Llama3 70B", value: "llama3-70b-8192" },
+  { label: "Llama3 8B", value: "llama3-8b-8192" },
+];
+
 export default function Playground() {
   const [text, setText] = useState(
     "My email is jane.doe@acme.com and my ssn is 123-45-6789. AWS key AKIA1234567890ABCD12"
@@ -45,6 +52,11 @@ export default function Playground() {
   const [hits, setHits] = useState<DetectorHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [model, setModel] = useState(MODEL_OPTIONS[0].value);
+  const [apiKey, setApiKey] = useState("");
+  const [llmOutput, setLlmOutput] = useState("");
+  const [llmLoading, setLlmLoading] = useState(false);
+  const [llmError, setLlmError] = useState<string | null>(null);
 
   const run = async () => {
     const endpoint = API_BASE ? `${API_BASE}/demo/submit` : "/api/demo";
@@ -79,6 +91,28 @@ export default function Playground() {
     document.getElementById("playground-diff")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const runWithModel = async () => {
+    const endpoint = API_BASE ? `${API_BASE}/demo/complete` : "/api/demo";
+    setLlmLoading(true);
+    setLlmError(null);
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, model, api_key: apiKey || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || "Failed to call model");
+      setRedacted(data.redacted || "");
+      setHits(data.hits || []);
+      setLlmOutput(data.completion || "");
+    } catch (err) {
+      setLlmError((err as Error).message);
+    } finally {
+      setLlmLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-20">
       <BackgroundGrid className="p-6 sm:p-10 shadow-[0_40px_140px_rgba(5,10,25,0.7)]">
@@ -96,6 +130,33 @@ export default function Playground() {
             <Button variant="secondary" onClick={copyRedacted} className="gap-2 border border-white/20 px-5 py-2 text-sm">
               <ClipboardCopy className="h-3.5 w-3.5" /> Copy endpoint
             </Button>
+          </div>
+          <div className="flex w-full flex-col gap-4 rounded-2xl border border-white/10 bg-black/30 p-5 text-left text-sm text-white/70 sm:flex-row sm:items-center">
+            <div className="flex-1">
+              <label className="text-xs uppercase tracking-[0.3em] text-white/60">Groq model</label>
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/15 bg-black/50 p-3 text-white"
+              >
+                {MODEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-slate-900">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs uppercase tracking-[0.3em] text-white/60">Groq API key (optional)</label>
+              <input
+                type="password"
+                placeholder="sk-..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/15 bg-black/50 p-3 text-white placeholder:text-white/40"
+              />
+              <p className="mt-1 text-xs text-white/50">Use your own key or leave blank to fall back to the server key.</p>
+            </div>
           </div>
         </div>
 
@@ -148,23 +209,33 @@ export default function Playground() {
         <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-[0_35px_80px_rgba(4,7,18,0.55)]">
           <div className="flex flex-wrap gap-3">
             <Button onClick={run} disabled={loading} className="gap-2 bg-emerald-400 px-5 py-2 text-sm font-semibold text-black">
-              {loading ? "Redacting…" : "Run redaction"}
+              {loading ? "Redacting…" : "Redact only"}
             </Button>
             <Button
-              onClick={copyRedacted}
-              variant="secondary"
-              className="gap-2 border border-white/15 bg-transparent px-4 py-2 text-xs uppercase tracking-[0.2em]"
+              onClick={runWithModel}
+              disabled={llmLoading}
+              className="gap-2 bg-white/90 px-5 py-2 text-sm font-semibold text-black"
             >
-              <ClipboardCopy className="h-3.5 w-3.5" /> Copy JSON
+              {llmLoading ? "Calling model…" : "Redact + call model"}
             </Button>
-            {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
+          {(error || llmError) && (
+            <p className="mt-2 text-sm text-red-400">{error || llmError}</p>
+          )}
           <div className="mt-6">
             <PiiDiff original={text} redacted={redacted} onOriginalChange={setText} />
           </div>
           <div className="mt-6">
             <RedactionTable hits={hits} />
           </div>
+          {llmOutput && (
+            <div className="mt-6 rounded-3xl border border-white/10 bg-black/30 p-4">
+              <div className="mb-3 flex items-center justify-between text-sm text-white/70">
+                <span>LLM response ({model})</span>
+              </div>
+              <Textarea readOnly value={llmOutput} className="min-h-[140px] bg-black/40" />
+            </div>
+          )}
         </div>
       </section>
 
