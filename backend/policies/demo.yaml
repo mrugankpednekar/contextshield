@@ -5,7 +5,7 @@ llm_targets:
     base_url: https://api.openai.com/v1
     allow_models: ["gpt-4o", "gpt-4o-mini"]
 detection:
-  presets: ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key"]
+  presets: ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key", "password"]
   ner:
     enabled: false
     entities: ["PERSON", "ORG", "LOCATION"]
@@ -20,6 +20,7 @@ redaction:
   ssn: tokenize
   jwt: drop
   aws_access_key: drop
+  password: drop
 responses:
   redact_model_output: true
   block_if_detected: ["credit_card", "ssn", "jwt", "aws_access_key"]

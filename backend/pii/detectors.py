@@ -13,6 +13,7 @@ SSN = re.compile(r"\b(?!000|666|9\d\d)\d{3}[- ]?(?!00)\d{2}[- ]?(?!0000)\d{4}\b"
 JWT = re.compile(r"eyJ[A-Za-z0-9_-]+?\.[A-Za-z0-9._-]+?\.[A-Za-z0-9._-]+")
 # AWS access keys are 20 chars total (AKIA + 16), but we also catch partial/truncated leaks (12-20 chars).
 AWS_ACCESS = re.compile(r"AKIA[0-9A-Z]{12,20}")
+PASSWORD = re.compile(r"(?i)password\s*[:=]\s*[^\s]+")
 
 PRESETS: dict[str, tuple[str, re.Pattern[str]]] = {
     "email": ("email", EMAIL),
@@ -21,6 +22,7 @@ PRESETS: dict[str, tuple[str, re.Pattern[str]]] = {
     "ssn": ("ssn", SSN),
     "jwt": ("jwt", JWT),
     "aws_access_key": ("aws_access_key", AWS_ACCESS),
+    "password": ("password", PASSWORD),
 }
 
 

@@ -14,12 +14,6 @@ import type { DetectorHit } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
-const heroStats = [
-  { label: "Secrets neutralized", value: "38,420", helper: "24h window" },
-  { label: "Avg added latency", value: "54 ms", helper: "P95 overhead" },
-  { label: "Block-ready tenants", value: "12", helper: "Policies enforced" },
-];
-
 const featureCards = [
   {
     icon: ShieldCheck,
@@ -159,19 +153,6 @@ export default function Playground() {
               <p className="mt-1 text-xs text-white/50">Use your own key or leave blank to fall back to the server key.</p>
             </div>
           </div>
-        </div>
-
-        <div className="mx-auto mt-10 grid w-full max-w-5xl gap-4 sm:grid-cols-3">
-          {heroStats.map((stat) => (
-            <div
-              key={stat.label}
-              className="flex h-full min-h-[160px] flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-b from-white/10/30 to-transparent p-5 text-left shadow-[0_12px_50px_rgba(2,6,23,0.5)]"
-            >
-              <p className="text-[10px] uppercase tracking-[0.5em] text-white/60">{stat.label}</p>
-              <p className="text-4xl font-semibold text-white">{stat.value}</p>
-              <p className="text-xs text-white/60">{stat.helper}</p>
-            </div>
-          ))}
         </div>
 
         <motion.div

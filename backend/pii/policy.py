@@ -13,7 +13,7 @@ DEFAULT_POLICY: dict[str, Any] = {
     "tenant_id": "demo",
     "mode": "observe",
     "detection": {
-        "presets": ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key"],
+        "presets": ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key", "password"],
         "entropy": {"enabled": True, "min_len": 20, "threshold": 4.0},
         "ner": {"enabled": False, "entities": ["PERSON", "ORG", "LOCATION"]},
     },
@@ -24,6 +24,7 @@ DEFAULT_POLICY: dict[str, Any] = {
         "ssn": "tokenize",
         "jwt": "drop",
         "aws_access_key": "drop",
+        "password": "drop",
     },
     "responses": {
         "redact_model_output": True,

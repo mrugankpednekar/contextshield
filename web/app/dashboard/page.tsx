@@ -31,14 +31,20 @@ export default function Dashboard() {
         </div>
       </BackgroundGrid>
 
-      <KpiCards
-        items={[
-          { label: "Requests (24h)", value: kpi.requests },
-          { label: "Redactions", value: kpi.redactions },
-          { label: "% with PII", value: `${kpi.pct_pii}%` },
-          { label: "P95 Added Latency", value: `${kpi.p95_ms} ms` },
-        ]}
-      />
+      {kpi.requests || kpi.redactions ? (
+        <KpiCards
+          items={[
+            { label: "Requests (24h)", value: kpi.requests },
+            { label: "Redactions", value: kpi.redactions },
+            { label: "% with PII", value: `${kpi.pct_pii}%` },
+            { label: "P95 Added Latency", value: `${kpi.p95_ms} ms` },
+          ]}
+        />
+      ) : (
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-sm text-white/70">
+          No traffic yet. Run a prompt in the playground to populate real stats.
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
           <div className="mb-2 flex items-center justify-between">
