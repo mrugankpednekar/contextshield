@@ -40,8 +40,9 @@ const featureCards = [
 
 const MODEL_OPTIONS = [
   { label: "Mixtral 8x7B (default)", value: "mixtral-8x7b-32768" },
-  { label: "Llama3 70B", value: "llama3-70b-8192" },
-  { label: "Llama3 8B", value: "llama3-8b-8192" },
+  { label: "Llama 3.1 70B Versatile", value: "llama-3.1-70b-versatile" },
+  { label: "Llama 3.1 8B Instant", value: "llama-3.1-8b-instant" },
+  { label: "Gemma2 9B Instruct", value: "gemma2-9b-it" },
 ];
 
 export default function Playground() {
