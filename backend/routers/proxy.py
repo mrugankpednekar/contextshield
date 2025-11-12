@@ -17,7 +17,7 @@ from ..store.events import add_event
 router = APIRouter()
 
 settings = get_settings()
-OPENAI_BASE = "https://api.openai.com/v1"
+GROQ_BASE = settings.groq_base_url
 
 
 def _scan_payload(raw: str, policy: dict[str, Any]):
@@ -69,11 +69,11 @@ async def chat_completions(
     redacted_payload = json.loads(redacted_text)
 
     is_stream = bool(redacted_payload.get("stream"))
-    auth_header = authorization or f"Bearer {settings.openai_api_key}" if settings.openai_api_key else None
+    auth_header = authorization or f"Bearer {settings.groq_api_key}" if settings.groq_api_key else None
     if not auth_header:
-        raise HTTPException(status_code=400, detail="Missing Authorization header or OPENAI_API_KEY")
+        raise HTTPException(status_code=400, detail="Missing Authorization header or GROQ_API_KEY")
 
-    url = f"{OPENAI_BASE}/chat/completions"
+    url = f"{GROQ_BASE}/chat/completions"
     headers = {"Authorization": auth_header}
     t0 = time.time()
 

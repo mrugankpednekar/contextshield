@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     openai_api_key: str | None = None
+    groq_api_key: str | None = None
+    groq_base_url: AnyUrl = "https://api.groq.com/openai/v1"  # Groq is OpenAI-compatible
     database_url: AnyUrl | None = None
     allow_origins: str = "*"
     policy_dir: str = "backend/policies"

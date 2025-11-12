@@ -1,10 +1,10 @@
 # ContextShield
 
-ContextShield is an OpenAI-compatible proxy that redacts PII/secrets before prompts reach an upstream LLM. It ships as a FastAPI backend plus a Next.js dashboard/playground to visualize detections, tweak YAML policies, and demo the service.
+ContextShield is an LLM proxy that redacts PII/secrets before prompts reach an upstream model. It ships as a FastAPI backend plus a Next.js dashboard/playground to visualize detections, tweak YAML policies, and demo the service.
 
 ## What you get
-- **Proxy API** – `/v1/chat/completions` drop-in for OpenAI with regex + entropy detection, optional Presidio NER, enforcement/observe modes, and request/response logging.
-- **Demo endpoint** – `/demo/submit` for a safe playground that never forwards to OpenAI.
+- **Proxy API** – `/v1/chat/completions` drop-in for OpenAI/Groq with regex + entropy detection, optional Presidio NER, enforcement/observe modes, and request/response logging.
+- **Demo endpoint** – `/demo/submit` for a safe playground that never forwards upstream.
 - **Live dashboard** – Next.js app with playground, charts, events feed, and policy editor.
 - **Policy engine** – YAML per tenant with presets, ner/entropy toggles, and redaction strategies.
 - **Storage hooks** – SQLAlchemy models for Postgres plus in-memory event buffer for the UI demo.
@@ -22,7 +22,7 @@ pip install -r backend/requirements.txt
 cd backend
 uvicorn backend.app:app --reload
 ```
-Environment variables live in `backend/.env` (sample included). At minimum set `OPENAI_API_KEY` when using the proxy.
+Environment variables live in `backend/.env` (sample included). With the Groq swap set `GROQ_API_KEY` (base URL defaults to `https://api.groq.com/openai/v1`).
 
 ## Frontend setup
 ```bash
