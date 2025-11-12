@@ -1,9 +1,9 @@
 tenant_id: demo
 mode: observe
 llm_targets:
-  - name: openai
-    base_url: https://api.openai.com/v1
-    allow_models: ["gpt-4o", "gpt-4o-mini"]
+  - name: groq
+    base_url: https://api.groq.com/openai/v1
+    allow_models: ["mixtral-8x7b-32768", "llama-3.1-8b-instant"]
 detection:
   presets: ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key", "password"]
   ner:
@@ -19,11 +19,11 @@ redaction:
   credit_card: tokenize
   ssn: tokenize
   jwt: drop
-  aws_access_key: drop
-  password: drop
+  aws_access_key: tokenize
+  password: tokenize
 responses:
   redact_model_output: true
-  block_if_detected: ["credit_card", "ssn", "jwt", "aws_access_key"]
+  block_if_detected: ["credit_card", "ssn", "jwt", "aws_access_key", "password"]
 logging:
   store_raw: false
   pii_snapshots: true
