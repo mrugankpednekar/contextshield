@@ -5,7 +5,7 @@ llm_targets:
     base_url: https://api.groq.com/openai/v1
     allow_models: ["mixtral-8x7b-32768", "llama-3.1-8b-instant"]
 detection:
-  presets: ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key", "password"]
+  presets: ["email", "phone", "phone_intl", "credit_card", "ssn", "jwt", "aws_access_key", "password"]
   ner:
     enabled: false
     entities: ["PERSON", "ORG", "LOCATION"]
@@ -14,11 +14,12 @@ detection:
     min_len: 20
     threshold: 4.0
 redaction:
-  email: mask
-  phone: mask
+  email: tokenize
+  phone: tokenize
+  phone_intl: tokenize
   credit_card: tokenize
   ssn: tokenize
-  jwt: drop
+  jwt: tokenize
   aws_access_key: tokenize
   password: tokenize
 responses:

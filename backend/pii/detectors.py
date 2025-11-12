@@ -8,6 +8,7 @@ from typing import Iterable
 
 EMAIL = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE = re.compile(r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
+PHONE_INTL = re.compile(r"\+\d{1,3}[-.\s]?\d{1,4}(?:[-.\s]?\d{2,4}){2,4}")
 CREDIT_CARD = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
 SSN = re.compile(r"\b(?!000|666|9\d\d)\d{3}[- ]?(?!00)\d{2}[- ]?(?!0000)\d{4}\b")
 JWT = re.compile(r"eyJ[A-Za-z0-9_-]+?\.[A-Za-z0-9._-]+?\.[A-Za-z0-9._-]+")
@@ -18,6 +19,7 @@ PASSWORD = re.compile(r"(?i)password\s*(?:is|=|:)\s*([^\s]+)")
 PRESETS: dict[str, tuple[str, re.Pattern[str]]] = {
     "email": ("email", EMAIL),
     "phone": ("phone", PHONE),
+    "phone_intl": ("phone", PHONE_INTL),
     "credit_card": ("credit_card", CREDIT_CARD),
     "ssn": ("ssn", SSN),
     "jwt": ("jwt", JWT),
