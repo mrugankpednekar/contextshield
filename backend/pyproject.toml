@@ -1,0 +1,28 @@
+[project]
+name = "contextshield-backend"
+version = "0.1.0"
+description = "PII-aware LLM proxy demo"
+authors = [{name = "ContextShield"}]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "python-dotenv",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy",
+    "psycopg[binary]",
+    "python-multipart",
+    "python-Levenshtein; sys_platform != 'win32'",
+    "presidio-analyzer",
+    "presidio-anonymizer",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx" ]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cs
+      POSTGRES_PASSWORD: cs
+      POSTGRES_DB: csdb
+    ports:
+      - "5432:5432"
+  api:
+    build: ./backend
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: postgresql+psycopg://cs:cs@db:5432/csdb
+      ALLOW_ORIGINS: "*"
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  web:
+    build: ./web
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+      API_BASE: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api

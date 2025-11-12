@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from ..config import get_settings
+
+settings = get_settings()
+engine = create_engine(settings.database_url or "sqlite:///./contextshield.db", future=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+
+def get_db():  # pragma: no cover
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg[binary]
+python-multipart
+python-Levenshtein; sys_platform != 'win32'
+presidio-analyzer
+presidio-anonymizer
+pyyaml

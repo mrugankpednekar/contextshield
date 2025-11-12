@@ -1,0 +1,29 @@
+tenant_id: demo
+mode: observe
+llm_targets:
+  - name: openai
+    base_url: https://api.openai.com/v1
+    allow_models: ["gpt-4o", "gpt-4o-mini"]
+detection:
+  presets: ["email", "phone", "credit_card", "ssn", "jwt", "aws_access_key"]
+  ner:
+    enabled: false
+    entities: ["PERSON", "ORG", "LOCATION"]
+  entropy:
+    enabled: true
+    min_len: 20
+    threshold: 4.0
+redaction:
+  email: mask
+  phone: mask
+  credit_card: tokenize
+  ssn: tokenize
+  jwt: drop
+  aws_access_key: drop
+responses:
+  redact_model_output: true
+  block_if_detected: ["credit_card", "ssn", "jwt", "aws_access_key"]
+logging:
+  store_raw: false
+  pii_snapshots: true
+  retention_days: 90
