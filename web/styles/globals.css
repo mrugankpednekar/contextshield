@@ -12,15 +12,22 @@ body {
   font-family: "Inter", "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   background-color: #030712;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 textarea {
   resize: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-height: 10rem;
 }
 
 @layer base {
   * {
     border-color: rgba(255, 255, 255, 0.08);
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   ::selection {

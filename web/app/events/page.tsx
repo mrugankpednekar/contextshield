@@ -1,8 +1,8 @@
 "use client";
 
 import useSWR from "swr";
-import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/section-heading";
+import { BackgroundGrid } from "@/components/ui/background-grid";
 import type { AuditEvent } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
@@ -15,15 +15,16 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-900/30 px-6 py-8">
+      <BackgroundGrid className="px-6 py-8">
         <SectionHeading
           eyebrow="Events"
           title="Live feed of passes, redactions, and policy blocks."
           description="Every proxy call is logged with detector hits, byte deltas, and latency for instant incident response."
         />
-      </section>
-      <Card className="bg-black/40 p-0">
-        <table className="w-full text-sm">
+      </BackgroundGrid>
+      <div className="rounded-3xl border border-white/10 bg-black/40">
+        <div className="w-full overflow-auto">
+        <table className="min-w-full text-sm">
           <thead className="text-white/60">
             <tr>
               <th className="p-4 text-left">Action</th>
@@ -48,25 +49,20 @@ export default function EventsPage() {
                       {event.action}
                     </span>
                   </td>
-                  <td className="p-4 text-white/70">
-                    {event.hits?.map((h) => h.type).join(", ") || "—"}
-                  </td>
-                  <td className="p-4 text-white/50">
+                  <td className="p-4 text-white/70">{event.hits?.map((h) => h.type).join(", ") || "—"}</td>
+                  <td className="p-4 text-white/60">
                     {event.bytes_in || 0} → {event.bytes_out || 0}
                   </td>
-                  <td className="p-4 text-white/50">{event.latency_ms ? `${event.latency_ms} ms` : "—"}</td>
-                  <td className="p-4 text-white/50">
-                    {event.ts ? new Date(event.ts).toLocaleTimeString() : "—"}
-                  </td>
+                  <td className="p-4 text-white/60">{event.latency_ms ? `${event.latency_ms} ms` : "—"}</td>
+                  <td className="p-4 text-white/60">{event.ts ? new Date(event.ts).toLocaleTimeString() : "—"}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        {!events.length && (
-          <div className="p-6 text-center text-white/40">No events yet — run a demo prompt!</div>
-        )}
-      </Card>
+        </div>
+        {!events.length && <div className="p-6 text-center text-white/40">No events yet — run a demo prompt!</div>}
+      </div>
     </div>
   );
 }

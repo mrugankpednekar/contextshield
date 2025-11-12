@@ -36,15 +36,12 @@ export function PiiDiff({ original, redacted, onOriginalChange }: DiffProps) {
               <p className="text-xs uppercase tracking-[0.4em] text-white/50">{panel.label}</p>
               <p className="text-sm text-white/60">{panel.description}</p>
             </div>
-            {panel.editable && (
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">Editable</span>
-            )}
           </div>
           <Textarea
             value={panel.value}
             onChange={(e) => panel.action?.(e.target.value)}
             readOnly={!panel.editable}
-            className="mt-4 h-60 w-full"
+            className="mt-4 min-h-[14rem] w-full overflow-auto text-sm leading-relaxed"
           />
         </div>
       ))}

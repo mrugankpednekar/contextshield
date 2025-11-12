@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PolicyEditor } from "@/components/editor-policy";
 import { SectionHeading } from "@/components/section-heading";
+import { BackgroundGrid } from "@/components/ui/background-grid";
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
 
@@ -25,7 +26,7 @@ export default function PoliciesPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-900/30 px-6 py-8">
+      <BackgroundGrid className="px-6 py-8">
         <SectionHeading
           eyebrow="Policies"
           title="YAML-powered detection + enforcement per tenant."
@@ -38,7 +39,7 @@ export default function PoliciesPage() {
             </span>
           ))}
         </div>
-      </section>
+      </BackgroundGrid>
       <PolicyEditor
         tenant={tenant}
         initialYaml={yaml}

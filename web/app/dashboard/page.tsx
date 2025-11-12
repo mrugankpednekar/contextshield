@@ -5,6 +5,7 @@ import { KpiCards } from "@/components/kpi-cards";
 import { RequestsChart, TopEntitiesChart } from "@/components/charts";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/section-heading";
+import { BackgroundGrid } from "@/components/ui/background-grid";
 import type { AuditSummaryResponse } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
@@ -19,7 +20,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-900/30 px-6 py-8">
+      <BackgroundGrid className="px-6 py-8">
         <SectionHeading
           eyebrow="Live Dashboard"
           title="Operational clarity for every tenant."
@@ -28,7 +29,7 @@ export default function Dashboard() {
         <div className="mt-4 text-sm text-white/60">
           Updated every 3s · {new Date().toLocaleTimeString()}
         </div>
-      </section>
+      </BackgroundGrid>
 
       <KpiCards
         items={[

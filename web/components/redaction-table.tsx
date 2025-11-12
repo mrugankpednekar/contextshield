@@ -23,8 +23,8 @@ export function RedactionTable({ hits }: { hits: DetectorHit[] }) {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">
                   {hit.type}
                 </p>
-                <p className="text-sm text-white/70">
-                  {hit.value?.slice(0, 80) || "value not captured (dropped)"}
+                <p className="max-w-full break-words text-sm text-white/70">
+                  {hit.value || "value not captured (dropped)"}
                 </p>
               </div>
               <div className="text-xs text-white/50">
