@@ -92,7 +92,7 @@ export default function Playground() {
   };
 
   const runWithModel = async () => {
-    const endpoint = API_BASE ? `${API_BASE}/demo/complete` : "/api/demo";
+    const endpoint = API_BASE ? `${API_BASE}/demo/complete` : "/api/demo/complete";
     setLlmLoading(true);
     setLlmError(null);
     try {
